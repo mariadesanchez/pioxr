@@ -3,28 +3,20 @@ import { useState } from "react";
 
 const categories = ["Normal", "Suspected_pulmonary_infarction", "Not_evaluable"];
 
-// Solo las imágenes del 1 al 17
-const images = Array.from({ length: 17 }, (_, i) => `${i + 1}.jpg`);
+// Lista con URLs y filename para identificar cada imagen
+const images = [
+  { url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/3_flvshj.jpg", filename: "3.jpg" },
+  { url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/4_1_y73adq.jpg", filename: "4_1.jpg" },
+  { url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/4_eahpp1.jpg", filename: "4.jpg" },
+  { url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859554/5_1_sifwxm.jpg", filename: "5_1.jpg" },
+];
 
+// Define aquí las categorías correctas para cada "filename"
 const correctCategories: Record<string, string> = {
-  "1.jpg": "Not_evaluable",
-  "2.jpg": "Not_evaluable",
   "3.jpg": "Not_evaluable",
+  "4_1.jpg": "Suspected_pulmonary_infarction",
   "4.jpg": "Suspected_pulmonary_infarction",
-  "5.jpg": "Suspected_pulmonary_infarction",
-  "6.jpg": "Suspected_pulmonary_infarction",
-  "7.jpg": "Suspected_pulmonary_infarction",
-  "8.jpg": "Suspected_pulmonary_infarction",
-  "9.jpg": "Suspected_pulmonary_infarction",
-  "10.jpg": "Suspected_pulmonary_infarction",
-  "11.jpg": "Suspected_pulmonary_infarction",
-  // Asumamos que del 12 al 17 son "Normal"
-  "12.jpg": "Normal",
-  "13.jpg": "Normal",
-  "14.jpg": "Normal",
-  "15.jpg": "Normal",
-  "16.jpg": "Normal",
-  "17.jpg": "Normal",
+  "5_1.jpg": "Suspected_pulmonary_infarction",
 };
 
 export default function HomePage() {
@@ -42,11 +34,13 @@ export default function HomePage() {
       return;
     }
 
-    const errors = images.filter(
-      (filename) =>
-        answers[filename] !== undefined &&
-        answers[filename] !== correctCategories[filename]
-    );
+    const errors = images
+      .map(({ filename }) => filename)
+      .filter(
+        (filename) =>
+          answers[filename] !== undefined &&
+          answers[filename] !== correctCategories[filename]
+      );
 
     if (errors.length === 0) {
       alert("¡Muy bien! Todas tus respuestas son correctas!!.");
@@ -109,13 +103,13 @@ export default function HomePage() {
           />
         </div>
 
-        {images.map((filename) => {
+        {images.map(({ url, filename }) => {
           const selected = answers[filename] || "";
           return (
             <div key={filename} className="mb-6 border p-4 rounded">
               <p className="font-semibold mb-1">{filename}</p>
               <img
-                src={`/img/${filename}`}
+                src={url}
                 alt={filename}
                 className="w-64 mb-2 border"
                 draggable={false}
@@ -149,9 +143,11 @@ export default function HomePage() {
     );
   }
 
-  const errores = images.filter(
-    (filename) => answers[filename] !== correctCategories[filename]
-  );
+  const errores = images
+    .map(({ filename }) => filename)
+    .filter(
+      (filename) => answers[filename] !== correctCategories[filename]
+    );
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -160,23 +156,26 @@ export default function HomePage() {
       {errores.length === 0 ? (
         <p className="text-green-600 font-semibold">🎉 ¡Todas las respuestas son correctas!</p>
       ) : (
-        errores.map((filename) => (
-          <div key={filename} className="mb-6 border p-4 rounded bg-red-50">
-            <p className="font-semibold mb-1">{filename}</p>
-            <img
-              src={`/img/${filename}`}
-              alt={filename}
-              className="w-64 mb-2 border"
-              draggable={false}
-            />
-            <p>
-              ✅ Respuesta correcta: <strong>{correctCategories[filename]}</strong>
-            </p>
-            <p>
-              ❌ Tu respuesta: <strong>{answers[filename]}</strong>
-            </p>
-          </div>
-        ))
+        errores.map((filename) => {
+          const image = images.find((img) => img.filename === filename);
+          return (
+            <div key={filename} className="mb-6 border p-4 rounded bg-red-50">
+              <p className="font-semibold mb-1">{filename}</p>
+              <img
+                src={image?.url}
+                alt={filename}
+                className="w-64 mb-2 border"
+                draggable={false}
+              />
+              <p>
+                ✅ Respuesta correcta: <strong>{correctCategories[filename]}</strong>
+              </p>
+              <p>
+                ❌ Tu respuesta: <strong>{answers[filename]}</strong>
+              </p>
+            </div>
+          );
+        })
       )}
     </div>
   );
