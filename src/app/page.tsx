@@ -1,22 +1,36 @@
 "use client";
+
 import { useState } from "react";
+import Image from "next/image";
 
 const categories = ["Normal", "Suspected_pulmonary_infarction", "Not_evaluable"];
 
-// Lista con URLs y filename para identificar cada imagen
 const images = [
-  { url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/3_flvshj.jpg", filename: "3.jpg" },
-  { url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/4_1_y73adq.jpg", filename: "4_1.jpg" },
-  { url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/4_eahpp1.jpg", filename: "4.jpg" },
-  { url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859554/5_1_sifwxm.jpg", filename: "5_1.jpg" },
+  {
+    filename: "3_flvshj.jpg",
+    url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/3_flvshj.jpg",
+  },
+  {
+    filename: "4_1_y73adq.jpg",
+    url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/4_1_y73adq.jpg",
+  },
+  {
+    filename: "4_eahpp1.jpg",
+    url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859555/4_eahpp1.jpg",
+  },
+  {
+    filename: "5_1_sifwxm.jpg",
+    url: "https://res.cloudinary.com/dbsjv8bdx/image/upload/v1754859554/5_1_sifwxm.jpg",
+  },
+  // Si tenés más imágenes, agregalas acá igual
 ];
 
-// Define aquí las categorías correctas para cada "filename"
+// Asumí categorías correctas para esos archivos, podés ajustarlas según corresponda:
 const correctCategories: Record<string, string> = {
-  "3.jpg": "Not_evaluable",
-  "4_1.jpg": "Suspected_pulmonary_infarction",
-  "4.jpg": "Suspected_pulmonary_infarction",
-  "5_1.jpg": "Suspected_pulmonary_infarction",
+  "3_flvshj.jpg": "Not_evaluable",
+  "4_1_y73adq.jpg": "Suspected_pulmonary_infarction",
+  "4_eahpp1.jpg": "Suspected_pulmonary_infarction",
+  "5_1_sifwxm.jpg": "Suspected_pulmonary_infarction",
 };
 
 export default function HomePage() {
@@ -34,27 +48,25 @@ export default function HomePage() {
       return;
     }
 
-    const errors = images
-      .map(({ filename }) => filename)
-      .filter(
-        (filename) =>
-          answers[filename] !== undefined &&
-          answers[filename] !== correctCategories[filename]
-      );
+    const errors = images.filter(
+      (img) =>
+        answers[img.filename] !== undefined &&
+        answers[img.filename] !== correctCategories[img.filename]
+    );
 
     if (errors.length === 0) {
-      alert("¡Muy bien! Todas tus respuestas son correctas!!.");
+      alert("¡Muy bien! Todas tus respuestas son correctas!");
       setFinished(true);
       return;
     }
 
-    const payload = errors.map((filename) => ({
+    const payload = errors.map((img) => ({
       country: userInfo.country,
       years: userInfo.years,
       specialty: userInfo.specialty,
-      filename,
-      correct_answer: correctCategories[filename],
-      user_answer: answers[filename],
+      filename: img.filename,
+      correct_answer: correctCategories[img.filename],
+      user_answer: answers[img.filename],
       correct: "No",
     }));
 
@@ -103,20 +115,25 @@ export default function HomePage() {
           />
         </div>
 
-        {images.map(({ url, filename }) => {
+        {images.map(({ filename, url }) => {
           const selected = answers[filename] || "";
           return (
             <div key={filename} className="mb-6 border p-4 rounded">
               <p className="font-semibold mb-1">{filename}</p>
-              <img
+              <Image
                 src={url}
                 alt={filename}
-                className="w-64 mb-2 border"
+                width={256}
+                height={256}
+                className="mb-2 border"
                 draggable={false}
               />
               <div>
                 {categories.map((cat) => (
-                  <label key={`${filename}-${cat}`} className="mr-6 cursor-pointer select-none">
+                  <label
+                    key={`${filename}-${cat}`}
+                    className="mr-6 cursor-pointer select-none"
+                  >
                     <input
                       type="radio"
                       name={filename}
@@ -143,40 +160,40 @@ export default function HomePage() {
     );
   }
 
-  const errores = images
-    .map(({ filename }) => filename)
-    .filter(
-      (filename) => answers[filename] !== correctCategories[filename]
-    );
+  const errores = images.filter(
+    (img) => answers[img.filename] !== correctCategories[img.filename]
+  );
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-xl font-bold mb-4">Errores cometidos</h1>
 
       {errores.length === 0 ? (
-        <p className="text-green-600 font-semibold">🎉 ¡Todas las respuestas son correctas!</p>
+        <p className="text-green-600 font-semibold">
+          🎉 ¡Todas las respuestas son correctas!
+        </p>
       ) : (
-        errores.map((filename) => {
-          const image = images.find((img) => img.filename === filename);
-          return (
-            <div key={filename} className="mb-6 border p-4 rounded bg-red-50">
-              <p className="font-semibold mb-1">{filename}</p>
-              <img
-                src={image?.url}
-                alt={filename}
-                className="w-64 mb-2 border"
-                draggable={false}
-              />
-              <p>
-                ✅ Respuesta correcta: <strong>{correctCategories[filename]}</strong>
-              </p>
-              <p>
-                ❌ Tu respuesta: <strong>{answers[filename]}</strong>
-              </p>
-            </div>
-          );
-        })
+        errores.map(({ filename, url }) => (
+          <div key={filename} className="mb-6 border p-4 rounded bg-red-50">
+            <p className="font-semibold mb-1">{filename}</p>
+            <Image
+              src={url}
+              alt={filename}
+              width={256}
+              height={256}
+              className="mb-2 border"
+              draggable={false}
+            />
+            <p>
+              ✅ Respuesta correcta: <strong>{correctCategories[filename]}</strong>
+            </p>
+            <p>
+              ❌ Tu respuesta: <strong>{answers[filename]}</strong>
+            </p>
+          </div>
+        ))
       )}
     </div>
   );
 }
+
