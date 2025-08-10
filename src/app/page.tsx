@@ -49,7 +49,7 @@ export default function HomePage() {
     );
 
     if (errors.length === 0) {
-      alert("¡Muy bien! Todas tus respuestas son correctas.");
+      alert("¡Muy bien! Todas tus respuestas son correctas!!.");
       setFinished(true);
       return;
     }
