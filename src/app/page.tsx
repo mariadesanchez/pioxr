@@ -11,7 +11,6 @@ type ImageData = {
 export default function Page() {
   const [images, setImages] = useState<ImageData[]>([]);
 
-  // Variables de entorno públicas (configurarlas en .env.local)
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
@@ -117,3 +116,4 @@ export default function Page() {
     </main>
   );
 }
+
