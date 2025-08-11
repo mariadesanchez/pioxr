@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
+import { useSession, signIn } from "next-auth/react";
 
 type ImageData = {
   url: string;
@@ -9,14 +10,25 @@ type ImageData = {
 };
 
 export default function Page() {
+  const { data: session, status } = useSession();
   const [images, setImages] = useState<ImageData[]>([]);
-
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
+  if (status === "loading") return <p>Cargando sesión...</p>;
+
+  if (!session) {
+    return (
+      <div style={{ textAlign: "center" }}>
+        <h1>No autorizado</h1>
+        <button onClick={() => signIn()}>Iniciar sesión</button>
+      </div>
+    );
+  }
+
   const uploadImage = async (file: File) => {
     if (!cloudName || !uploadPreset) {
-      alert('Configura NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME y NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET en .env.local');
+      alert('Configura variables en .env');
       return;
     }
 
@@ -24,29 +36,21 @@ export default function Page() {
     formData.append('file', file);
     formData.append('upload_preset', uploadPreset);
 
-    try {
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: 'POST',
-        body: formData,
-      });
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (res.ok && data.secure_url) {
-        setImages((prev) => [
-          ...prev,
-          {
-            url: data.secure_url,
-            status: 'Normal',
-            id: Date.now() + Math.random(),
-          },
-        ]);
-      } else {
-        alert('Error al subir la imagen');
-      }
-    } catch (error) {
-      alert('Error en la conexión con Cloudinary');
-      console.error(error);
+    if (res.ok && data.secure_url) {
+      setImages(prev => [...prev, {
+        url: data.secure_url,
+        status: 'Normal',
+        id: Date.now() + Math.random(),
+      }]);
+    } else {
+      alert("Error al subir");
     }
   };
 
@@ -56,60 +60,14 @@ export default function Page() {
     }
   };
 
-  const handleStatusChange = (id: number, status: ImageData['status']) => {
-    setImages((prev) =>
-      prev.map((img) =>
-        img.id === id
-          ? {
-              ...img,
-              status,
-            }
-          : img
-      )
-    );
-  };
-
   return (
     <main style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
       <h1>Sube imágenes a Cloudinary</h1>
       <input type="file" accept="image/*" onChange={handleFileChange} />
-
       <div style={{ marginTop: 20 }}>
         {images.map(({ url, status, id }) => (
           <div key={id} style={{ marginBottom: 30 }}>
             <img src={url} alt="uploaded" style={{ maxWidth: '100%', borderRadius: 8 }} />
-            <div style={{ marginTop: 10 }}>
-              <label>
-                <input
-                  type="radio"
-                  name={`status-${id}`}
-                  value="Normal"
-                  checked={status === 'Normal'}
-                  onChange={() => handleStatusChange(id, 'Normal')}
-                />
-                Normal
-              </label>
-              <label style={{ marginLeft: 15 }}>
-                <input
-                  type="radio"
-                  name={`status-${id}`}
-                  value="Suspected_pulmonary_infarction"
-                  checked={status === 'Suspected_pulmonary_infarction'}
-                  onChange={() => handleStatusChange(id, 'Suspected_pulmonary_infarction')}
-                />
-                Suspected pulmonary infarction
-              </label>
-              <label style={{ marginLeft: 15 }}>
-                <input
-                  type="radio"
-                  name={`status-${id}`}
-                  value="Not_evaluable"
-                  checked={status === 'Not_evaluable'}
-                  onChange={() => handleStatusChange(id, 'Not_evaluable')}
-                />
-                Not evaluable
-              </label>
-            </div>
           </div>
         ))}
       </div>
