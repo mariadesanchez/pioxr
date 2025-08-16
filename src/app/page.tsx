@@ -1,56 +1,55 @@
 'use client';
 
-import { useState, ChangeEvent, useEffect } from 'react';
-import { useSession, signIn } from "next-auth/react";
+import { useState, ChangeEvent } from 'react';
+import Image from 'next/image';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 type ImageData = {
   url: string;
-  status: 'Normal' | 'Suspected_pulmonary_infarction' | 'Not_evaluable';
   id: number;
 };
 
-export default function Page() {
+export default function UploadPage() {
   const { data: session, status } = useSession();
   const [images, setImages] = useState<ImageData[]>([]);
+
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-  if (status === "loading") return <p>Cargando sesión...</p>;
-
-  if (!session) {
-    return (
-      <div style={{ textAlign: "center" }}>
-        <h1>No autorizado</h1>
-        <button onClick={() => signIn()}>Iniciar sesión</button>
-      </div>
-    );
-  }
-
   const uploadImage = async (file: File) => {
     if (!cloudName || !uploadPreset) {
-      alert('Configura variables en .env');
+      alert('Configura las variables NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME y NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET en .env.local');
       return;
     }
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', uploadPreset);
+    formData.append('folder', 'pioxr');
 
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: 'POST',
-      body: formData,
-    });
+    try {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
 
-    const data = await res.json();
+      const data = await res.json();
+      console.log('Respuesta Cloudinary:', data);
 
-    if (res.ok && data.secure_url) {
-      setImages(prev => [...prev, {
-        url: data.secure_url,
-        status: 'Normal',
-        id: Date.now() + Math.random(),
-      }]);
-    } else {
-      alert("Error al subir");
+      if (res.ok && data.secure_url) {
+        setImages((prev) => [
+          ...prev,
+          {
+            url: data.secure_url,
+            id: Date.now() + Math.random(),
+          },
+        ]);
+      } else {
+        alert('Error al subir la imagen');
+      }
+    } catch (error) {
+      alert('Error en la conexión con Cloudinary');
+      console.error(error);
     }
   };
 
@@ -60,18 +59,43 @@ export default function Page() {
     }
   };
 
+  if (status === 'loading') {
+    return <p>Cargando sesión...</p>;
+  }
+
+  if (!session) {
+    return (
+      <main style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
+        <h1>Por favor, inicia sesión para subir imágenes</h1>
+        <button onClick={() => signIn()}>Iniciar sesión</button>
+      </main>
+    );
+  }
+
   return (
     <main style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
-      <h1>Sube imágenes a Cloudinary</h1>
+      <h1>Sube imágenes a Cloudinary en carpeta &quot;pioxr&quot;</h1>
+      <button onClick={() => signOut({ callbackUrl: '/' })} style={{ marginBottom: 20 }}>
+        Cerrar sesión
+      </button>
       <input type="file" accept="image/*" onChange={handleFileChange} />
+
       <div style={{ marginTop: 20 }}>
-        {images.map(({ url, status, id }) => (
+        {images.map(({ url, id }) => (
           <div key={id} style={{ marginBottom: 30 }}>
-            <img src={url} alt="uploaded" style={{ maxWidth: '100%', borderRadius: 8 }} />
+            <Image
+              src={url}
+              alt="Imagen subida"
+              width={600}
+              height={400}
+              style={{ borderRadius: 8 }}
+              priority={false}
+            />
           </div>
         ))}
       </div>
     </main>
   );
 }
+
 

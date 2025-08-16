@@ -25,7 +25,7 @@ export default function LoginPage() {
 
   return (
     <main style={{ maxWidth: 400, margin: "auto", padding: 20 }}>
-      <h1>Iniciar sesión</h1>
+      <h1>Iniciar New sesión</h1>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
