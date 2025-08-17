@@ -1,4 +1,4 @@
-import { SessionProviderClient } from './providers/SessionProviderClient';
+import SessionProviderClient from "../providers/SessionProviderClient";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +9,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
-
-
 

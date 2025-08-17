@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const nuevoCaso = await prisma.casos.create({
+    const nuevoCaso = await prisma.pio.create({
       data: { imageUrl, tipo },
     });
 
